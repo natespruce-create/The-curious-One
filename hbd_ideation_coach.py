@@ -87,23 +87,15 @@ User message (or idea edit) text:
 User action (how they engaged):
 {user_action}
 
-Return a single valid JSON object with EXACTLY these keys (NO omissions, NO extra keys):
-- idea_generation
-- improved_curiosity
-- making_connections
-- seeing_new_things
-- realizing_ability
+Return ONLY a single line with 5 comma-separated floats in this exact order:
+idea_generation, improved_curiosity, making_connections, seeing_new_things, realizing_ability
 
-Constraints:
-- All 5 values must be non-negative floats.
-- The 5 values must be normalized to sum to exactly 1.0 (within 0.01).
-- Output must be valid JSON that Python can parse with json.loads().
+Rules:
+- Output exactly 5 numbers.
+- Values are non-negative floats.
+- The five numbers must sum to 1.0 (within 0.01).
+- No brackets, no braces, no extra text.
 
-Output rules (must follow):
-- JSON ONLY
-- No markdown fences
-- No trailing commas
-- No explanation text
 """.strip()
 
 
@@ -133,6 +125,25 @@ def radar_chart(probs: HBDProbabilities, title: str = "HBDi Spider Web (5-dim di
         margin=dict(l=20, r=20, t=60, b=20),
     )
     return fig
+def parse_probs_from_csv(text: str) -> HBDProbabilities:
+    # Extract all numbers (floats/ints) from the text
+    nums = re.findall(r"[-+]?\d*\.\d+|[-+]?\d+", text)
+    if len(nums) < 5:
+        raise ValueError(f"Expected at least 5 numbers, got {len(nums)}. Text: {text}")
+
+    vals = [float(x) for x in nums[:5]]
+    if any(v < 0 for v in vals):
+        raise ValueError("Probabilities must be non-negative.")
+
+    s = sum(vals)
+    if s <= 0:
+        raise ValueError("Sum of probabilities must be > 0.")
+
+    # normalize to sum to 1
+    vals = [v / s for v in vals]
+
+    data = dict(zip(DIMENSIONS, vals))
+    return HBDProbabilities.from_json_dict(data)
 
 
 def extract_json_object(text: str) -> str:
