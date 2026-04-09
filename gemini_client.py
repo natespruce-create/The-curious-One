@@ -114,36 +114,30 @@ Important:
     if not text:
         text = str(response)
 
-    # Lightweight parsing of the plain-text format into a dict
+    # Robust parsing of the expected format
     mirror = ""
     directions: list[str] = []
     question = ""
 
-    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
-    mode = None
-    for ln in lines:
-        if ln.startswith("MIRROR:"):
-            mode = "mirror"
-            mirror = ln.replace("MIRROR:", "", 1).strip()
-        elif ln.startswith("DIRECTIONS:"):
-            mode = "dirs"
-        elif ln.startswith("QUESTION:"):
-            mode = "question"
-            question = ln.replace("QUESTION:", "", 1).strip()
-        elif mode == "dirs":
-            if ln[0].isdigit() and ")" in ln:
-                directions.append(ln.split(")", 1)[1].strip())
+    # MIRROR
+    m = re.search(r"MIRROR:\s*(.*?)(?:\nDIRECTIONS:|\nQUESTION:|$)", text, re.DOTALL)
+    if m:
+        mirror = m.group(1).strip()
 
-    # Fallback if formatting is slightly different
-    if not directions and "1)" in text and "2)" in text and "3)" in text:
-        # crude extraction
-        parts = text.split("DIRECTIONS:", 1)[-1]
-        for i in ["1)", "2)", "3)"]:
-            # not perfect, but enough for a first working prototype
-            pass
+    # DIRECTIONS 1-3
+    # Capture each "1) ...", "2) ...", "3) ..."
+    for idx in [1, 2, 3]:
+        dm = re.search(rf"{idx}\)\s*(.*?)(?=\n\d\)|\nQUESTION:|$)", text, re.DOTALL)
+        if dm:
+            directions.append(dm.group(1).strip())
+
+    # QUESTION
+    qm = re.search(r"QUESTION:\s*(.*)$", text, re.DOTALL)
+    if qm:
+        question = qm.group(1).strip()
 
     return {
         "mirror": mirror or text,
         "directions": directions[:3],
-        "question": question or "",
+        "question": question,
     }
