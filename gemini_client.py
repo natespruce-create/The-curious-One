@@ -59,15 +59,6 @@ def call_llm_for_coaching(
     coaching_prompt = f"""
 You are a warm mentor and playful explorer curiosity coach.
 
-Goal:
-Given the theme and the user's current idea direction, help them develop better ideation through curiosity and creativity.
-
-Nudge target dimension:
-{nudge_dimension}
-
-HBDi probabilities (normalized):
-{prob_lines}
-
 Theme/question:
 {user_question_theme}
 
@@ -77,14 +68,27 @@ User idea text:
 User action:
 {user_action}
 
-Output format (plain text, no markdown, no code fences):
+Nudge target dimension (strengthen next):
+{nudge_dimension}
+
+HBDi probabilities:
+{prob_lines}
+
+OUTPUT MUST FOLLOW THIS TEMPLATE EXACTLY (plain text, no markdown, no extra headings):
 MIRROR: <one short paragraph>
+
 DIRECTIONS:
 1) <Try exploring... direction 1>
 2) <Try exploring... direction 2>
 3) <Try exploring... direction 3>
+
 QUESTION: <one curiosity question>
+
+Rules:
+- Include DIRECTIONS and all three numbered items (1, 2, 3).
+- Do not omit the labels MIRROR:, DIRECTIONS:, and QUESTION:
 """.strip()
+
 
     attempts = 3
     last_err = None
