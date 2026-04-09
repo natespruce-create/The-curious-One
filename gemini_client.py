@@ -5,7 +5,7 @@ import json
 import streamlit as st
 from google import genai
 
-from hbd_ideation_coach import HBDProbabilities, extract_json_object
+from hbd_ideation_coach import parse_probs_from_csv
 
 
 def call_llm_for_hbd_probs(prompt: str) -> HBDProbabilities:
@@ -29,9 +29,8 @@ def call_llm_for_hbd_probs(prompt: str) -> HBDProbabilities:
 
         st.write("RAW MODEL OUTPUT:", text)
 
-        json_str = extract_json_object(text)
-        data = json.loads(json_str)
-        return HBDProbabilities.from_json_dict(data)
+        return parse_probs_from_csv(text)
+
 
     try:
         return run_once(prompt)
