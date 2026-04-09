@@ -1,7 +1,6 @@
 import streamlit as st
 
 from hbd_ideation_coach import CoachState, build_prompt_payload_for_llm
-from hbd_ideation_coach import radar_chart  # not used now, but harmless
 from gemini_client import call_llm_for_hbd_probs, call_llm_for_coaching
 
 st.set_page_config(page_title="Curiosity Coach", layout="wide")
@@ -38,7 +37,6 @@ if st.button("Generate + Coach"):
         st.warning("Please fill theme/question and your idea text.")
         st.stop()
 
-    # 1) Get HBDi probabilities (used only to tailor coaching)
     probs_prompt = build_prompt_payload_for_llm(
         user_question_theme=user_question_theme,
         user_text=user_text,
@@ -48,25 +46,24 @@ if st.button("Generate + Coach"):
     with st.spinner("Reading your thinking style (HBDi)…"):
         probs = call_llm_for_hbd_probs(probs_prompt)
 
-    rotation_target = st.session_state.state.least_used_with_history_tiebreak(probs)
-    st.session_state.state.least_used_history.append(rotation_target)
+    nudge_dimension = st.session_state.state.least_used_with_history_tiebreak(probs)
+    st.session_state.state.least_used_history.append(nudge_dimension)
 
-    # 2) Generate curiosity coaching
     with st.spinner("Coaching your next curiosity moves…"):
-        coaching_text = call_llm_for_coaching(
+        coaching = call_llm_for_coaching(
             user_question_theme=user_question_theme,
             user_text=user_text,
             user_action=user_action,
             probs=probs,
-            nudge_dimension=rotation_target,
+            nudge_dimension=nudge_dimension,
         )
 
     st.subheader("Coach mirror (strength-based)")
-    st.write(coaching_text.get("mirror", ""))
+    st.write(coaching["mirror"])
 
     st.subheader("Try exploring (3 directions)")
-    for d in coaching_text.get("directions", []):
+    for d in coaching["directions"]:
         st.write(f"• {d}")
 
     st.subheader("Curiosity question")
-    st.write(coaching_text.get("question", ""))
+    st.write(coaching["question"])
