@@ -23,7 +23,7 @@ def call_llm_for_hbd_probs(prompt: str) -> HBDProbabilities:
         },
     )
 
-        text = getattr(response, "text", None)
+    text = getattr(response, "text", None)
     if not text:
         text = str(response)
 
@@ -33,5 +33,3 @@ def call_llm_for_hbd_probs(prompt: str) -> HBDProbabilities:
     data = json.loads(json_str)
 
     return HBDProbabilities.from_json_dict(data)
-
-
