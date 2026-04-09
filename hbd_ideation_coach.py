@@ -87,17 +87,24 @@ User message (or idea edit) text:
 User action (how they engaged):
 {user_action}
 
-Return a JSON object with EXACTLY these keys:
+Return a single valid JSON object with EXACTLY these keys (NO omissions, NO extra keys):
 - idea_generation
 - improved_curiosity
 - making_connections
 - seeing_new_things
 - realizing_ability
 
-Each value must be a non-negative float.
-The values must be normalized so the values sum to 1.0 (within small float error).
+Constraints:
+- All 5 values must be non-negative floats.
+- The 5 values must be normalized to sum to exactly 1.0 (within 0.01).
+- Output must be valid JSON that Python can parse with json.loads().
 
-JSON only. Do not wrap in markdown. Do not include any other text.
+Output rules (must follow):
+- JSON ONLY
+- No markdown fences
+- No trailing commas
+- No explanation text
+
 
 """.strip()
 
