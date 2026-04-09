@@ -19,7 +19,7 @@ def call_llm_for_hbd_probs(prompt: str) -> HBDProbabilities:
             contents=p,
             config={
                 "temperature": 0.2,
-                "max_output_tokens": 300,
+                "max_output_tokens": 600,
             },
         )
 
