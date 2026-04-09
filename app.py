@@ -17,7 +17,10 @@ user_question_theme = st.text_area(
 )
 
 st.subheader("2) Your idea text (what you're exploring)")
-user_text = st.text_area("Enter your idea / description", height=140)
+user_text = st.text_area(
+    "Enter your idea / description",
+    height=140,
+)
 
 st.subheader("3) What you just did")
 user_action = st.selectbox(
@@ -45,7 +48,6 @@ if st.button("Generate + show spider web"):
 
         st.write("Dominant thinking dimension:", probs.dominant())
 
-        # rotation target (least-used) can be displayed too
         rotation_target = st.session_state.state.least_used_with_history_tiebreak(probs)
         st.session_state.state.least_used_history.append(rotation_target)
 
