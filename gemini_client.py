@@ -68,26 +68,24 @@ User idea text:
 User action:
 {user_action}
 
-Nudge target dimension (strengthen next):
+Nudge target dimension:
 {nudge_dimension}
 
 HBDi probabilities:
 {prob_lines}
 
-OUTPUT MUST FOLLOW THIS TEMPLATE EXACTLY (plain text, no markdown, no extra headings):
-MIRROR: <one short paragraph>
-
-DIRECTIONS:
-1) <Try exploring... direction 1>
-2) <Try exploring... direction 2>
-3) <Try exploring... direction 3>
-
-QUESTION: <one curiosity question>
+Return ONLY valid JSON with EXACTLY these keys:
+- "mirror" (string)
+- "directions" (array of exactly 3 strings)
+- "question" (string)
 
 Rules:
-- Include DIRECTIONS and all three numbered items (1, 2, 3).
-- Do not omit the labels MIRROR:, DIRECTIONS:, and QUESTION:
+- No extra keys
+- No markdown
+- No commentary
+- Output must be directly parseable by json.loads()
 """.strip()
+
 
 
     attempts = 3
