@@ -23,14 +23,15 @@ def call_llm_for_hbd_probs(prompt: str) -> HBDProbabilities:
         },
     )
 
-    text = getattr(response, "text", None)
-if not text:
-    text = str(response)
+        text = getattr(response, "text", None)
+    if not text:
+        text = str(response)
 
-st.write("RAW MODEL OUTPUT:", text)  # <-- add this line here
+    st.write("RAW MODEL OUTPUT:", text)
 
-json_str = extract_json_object(text)
-data = json.loads(json_str)
+    json_str = extract_json_object(text)
+    data = json.loads(json_str)
 
-return HBDProbabilities.from_json_dict(data)
+    return HBDProbabilities.from_json_dict(data)
+
 
