@@ -1,4 +1,5 @@
 from __future__ import annotations
+from hbd_ideation_coach import extract_json_object
 
 import json
 import re
