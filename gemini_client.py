@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import json
-import time
 import re
+import time
 
 import streamlit as st
 from google import genai
@@ -23,27 +23,18 @@ def call_llm_for_hbd_probs(prompt: str) -> HBDProbabilities:
         response = client.models.generate_content(
             model=model_name,
             contents=p,
-            config={
-                "temperature": 0.2,
-                "max_output_tokens": 600,
-            },
+            config={"temperature": 0.2, "max_output_tokens": 600},
         )
 
-        text = getattr(response, "text", None)
-        if not text:
-            text = str(response)
-
+        text = getattr(response, "text", None) or str(response)
         st.write("RAW MODEL OUTPUT:", text)
         return parse_probs_from_csv(text)
 
     try:
         return run_once(prompt)
     except Exception as e:
-        st.write("Retrying with fallback. Error:", str(e))
-        fix_prompt = (
-            prompt
-            + "\n\nIMPORTANT: Output ONLY the 5 comma-separated floats (no other text)."
-        )
+        st.write("Retrying HBDi probs. Error:", str(e))
+        fix_prompt = prompt + "\n\nIMPORTANT: Output ONLY the 5 comma-separated floats (no other text)."
         return run_once(fix_prompt)
 
 
@@ -98,11 +89,22 @@ Rules:
             response = client.models.generate_content(
                 model=model_name,
                 contents=coaching_prompt,
-                config={
-                    "temperature": 0.7,
-                    "max_output_tokens": 500,
-                },
+                config={"temperature": 0.7, "max_output_tokens": 500},
             )
 
-            text = getattr(response, "text", None)
-            if not text:
+            text = getattr(response, "text", None) or str(response)
+            st.write("COACH RAW MODEL OUTPUT:", text)
+
+            data = json.loads(extract_json_object(text))
+            return {
+                "mirror": data.get("mirror", ""),
+                "directions": data.get("directions", [])[:3],
+                "question": data.get("question", ""),
+            }
+
+        except Exception as e:
+            last_err = e
+            st.write(f"Coach retry {i+1}/{attempts}. Error:", str(e))
+            time.sleep(1.5 * (i + 1))
+
+    raise last_err
