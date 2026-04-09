@@ -25,12 +25,13 @@ def call_llm_for_hbd_probs(prompt: str) -> HBDProbabilities:
             },
         )
 
-        text = getattr(response, "text", None)
-        if not text:
-            text = str(response)
+       data = json.loads(extract_json_object(text))  # reuse your existing extractor
+return {
+    "mirror": data.get("mirror", ""),
+    "directions": data.get("directions", [])[:3],
+    "question": data.get("question", ""),
+}
 
-        st.write("RAW MODEL OUTPUT:", text)
-        return parse_probs_from_csv(text)
 
     try:
         return run_once(prompt)
