@@ -104,8 +104,6 @@ Output rules (must follow):
 - No markdown fences
 - No trailing commas
 - No explanation text
-
-
 """.strip()
 
 
