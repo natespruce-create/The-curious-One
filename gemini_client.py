@@ -5,7 +5,8 @@ import json
 import streamlit as st
 from google import genai
 
-from hbd_ideation_coach import parse_probs_from_csv
+from hbd_ideation_coach import parse_probs_from_csv, HBDProbabilities
+
 
 
 def call_llm_for_hbd_probs(prompt: str) -> HBDProbabilities:
