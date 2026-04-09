@@ -10,26 +10,37 @@ from hbd_ideation_coach import HBDProbabilities, extract_json_object
 
 def call_llm_for_hbd_probs(prompt: str) -> HBDProbabilities:
     api_key = st.secrets["GEMINI_API_KEY"]
-
     client = genai.Client(api_key=api_key)
     model_name = "gemini-2.5-flash"
 
-    response = client.models.generate_content(
-        model=model_name,
-        contents=prompt,
-        config={
-            "temperature": 0.2,
-            "max_output_tokens": 300,
-        },
-    )
+    def run_once(p: str) -> HBDProbabilities:
+        response = client.models.generate_content(
+            model=model_name,
+            contents=p,
+            config={
+                "temperature": 0.2,
+                "max_output_tokens": 300,
+            },
+        )
 
-    text = getattr(response, "text", None)
-    if not text:
-        text = str(response)
+        text = getattr(response, "text", None)
+        if not text:
+            text = str(response)
 
-    st.write("RAW MODEL OUTPUT:", text)
+        st.write("RAW MODEL OUTPUT:", text)
 
-    json_str = extract_json_object(text)
-    data = json.loads(json_str)
+        json_str = extract_json_object(text)
+        data = json.loads(json_str)
+        return HBDProbabilities.from_json_dict(data)
 
-    return HBDProbabilities.from_json_dict(data)
+    try:
+        return run_once(prompt)
+    except Exception as e:
+        st.write("Retrying with JSON-fix instruction. Error:", str(e))
+
+        fix_prompt = (
+            prompt
+            + "\n\nIMPORTANT: Your previous output was not valid JSON matching the schema. "
+              "Output ONLY a single valid JSON object with ALL 5 keys. No extra text."
+        )
+        return run_once(fix_prompt)
