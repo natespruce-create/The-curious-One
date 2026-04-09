@@ -33,25 +33,45 @@ user_action = st.selectbox(
     ],
 )
 
-if st.button("Generate + show spider web"):
+if st.button("Generate + Coach (curiosity)"):
     if not user_question_theme.strip() or not user_text.strip():
         st.warning("Please fill theme/question and your idea text.")
     else:
-        prompt = build_prompt_payload_for_llm(
+        # 1) Build prompt for HBDi probs (CSV/whatever you’re using now)
+        probs_prompt = build_prompt_payload_for_llm(
             user_question_theme=user_question_theme,
             user_text=user_text,
             user_action=user_action,
         )
 
-        with st.spinner("Calling Gemini (flash) and analyzing thinking..."):
-            probs = call_llm_for_hbd_probs(prompt)
+        with st.spinner("Reading your thinking style (HBDi)…"):
+            probs = call_llm_for_hbd_probs(probs_prompt)
 
-        st.write("Dominant thinking dimension:", probs.dominant())
-
+        # 2) Compute which dimension to nudge next (least-used, history-based)
         rotation_target = st.session_state.state.least_used_with_history_tiebreak(probs)
         st.session_state.state.least_used_history.append(rotation_target)
 
-        st.write("Coach rotation target (least used):", rotation_target)
+        st.write("Coach will nudge:", rotation_target)
 
-        fig = radar_chart(probs, title="HBDi Spider Web (after your idea edit)")
-        st.plotly_chart(fig, use_container_width=True)
+        # 3) Now generate the curiosity coaching (no spider web yet)
+        from gemini_client import call_llm_for_coaching  # we’ll add this next
+
+        with st.spinner("Coaching your next curiosity moves…"):
+            coaching_text = call_llm_for_coaching(
+                user_question_theme=user_question_theme,
+                user_text=user_text,
+                user_action=user_action,
+                probs=probs,
+                nudge_dimension=rotation_target,
+            )
+
+        st.subheader("Coach mirror (strength-based)")
+        st.write(coaching_text["mirror"])
+
+        st.subheader("Try exploring (3 directions)")
+        for d in coaching_text["directions"]:
+            st.write(f"• {d}")
+
+        st.subheader("Curiosity question")
+        st.write(coaching_text["question"])
+
