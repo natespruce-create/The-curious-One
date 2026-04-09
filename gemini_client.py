@@ -23,7 +23,7 @@ def call_llm_for_hbd_probs(prompt: str) -> HBDProbabilities:
         response = client.models.generate_content(
             model=model_name,
             contents=p,
-            config={"temperature": 0.2, "max_output_tokens": 600},
+            config={"temperature": 0.2, "max_output_tokens": 200},
         )
 
         text = getattr(response, "text", None) or str(response)
