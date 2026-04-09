@@ -58,7 +58,7 @@ def call_llm_for_coaching(
 
     prob_lines = "\n".join([f"- {k}: {v:.2f}" for k, v in probs.probs.items()])
 
-    coaching_prompt = f"""
+   coaching_prompt = f"""
 You are a warm mentor and playful explorer curiosity coach.
 
 Theme/question:
@@ -87,6 +87,7 @@ Rules:
 - No commentary
 - Output must be directly parseable by json.loads()
 """.strip()
+
 
 
 
