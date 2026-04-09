@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import time
 import streamlit as st
 from google import genai
 
@@ -15,14 +16,28 @@ def call_llm_for_hbd_probs(prompt: str) -> HBDProbabilities:
     model_name = "gemini-2.5-flash"
 
     def run_once(p: str) -> HBDProbabilities:
+       attempts = 3
+last_err = None
+for i in range(attempts):
+    try:
         response = client.models.generate_content(
             model=model_name,
-            contents=p,
+            contents=coaching_prompt,
             config={
-                "temperature": 0.2,
+                "temperature": 0.7,
                 "max_output_tokens": 600,
             },
         )
+        last_err = None
+        break
+    except Exception as e:
+        last_err = e
+        st.write(f"Gemini server error (attempt {i+1}/{attempts}). Retrying…")
+        time.sleep(1.5 * (i + 1))
+
+if last_err is not None:
+    raise last_err
+
 
         text = getattr(response, "text", None)
         if not text:
