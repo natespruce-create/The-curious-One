@@ -51,35 +51,23 @@ def call_llm_for_coaching(
 
     prob_lines = "\n".join([f"- {k}: {v:.2f}" for k, v in probs.probs.items()])
 
-    coaching_prompt = f"""
-You are a warm mentor and playful explorer curiosity coach.
+   coaching_prompt = f"""
+You are a warm curiosity coach.
 
-Theme/question:
-{user_question_theme}
+Return ONLY valid JSON (no markdown) with EXACTLY these keys:
+- "mirror": string (max 20 words)
+- "directions": array of exactly 3 strings (each max 12 words)
+- "question": string (max 15 words)
 
-User idea text:
-{user_text}
+Theme/question: {user_question_theme}
+User idea: {user_text}
+User action: {user_action}
+Nudge dimension: {nudge_dimension}
+HBDi probabilities: {prob_lines}
 
-User action:
-{user_action}
-
-Nudge target dimension:
-{nudge_dimension}
-
-HBDi probabilities:
-{prob_lines}
-
-Return ONLY valid JSON with EXACTLY these keys:
-- "mirror" (string)
-- "directions" (array of exactly 3 strings)
-- "question" (string)
-
-Rules:
-- No extra keys
-- No markdown
-- No commentary
-- Output must be directly parseable by json.loads()
+Output must be directly parseable by json.loads().
 """.strip()
+
 
     attempts = 3
     last_err = None
