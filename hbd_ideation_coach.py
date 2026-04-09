@@ -97,7 +97,8 @@ Return a JSON object with EXACTLY these keys:
 Each value must be a non-negative float.
 The values must be normalized so the values sum to 1.0 (within small float error).
 
-JSON only. No extra text.
+JSON only. Do not wrap in markdown. Do not include any other text.
+
 """.strip()
 
 
