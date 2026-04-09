@@ -43,35 +43,63 @@ def call_llm_for_coaching(
 
     prob_lines = "\n".join([f"- {k}: {v:.2f}" for k, v in probs.probs.items()])
 
-    coaching_prompt = f"""
+    def build_prompt() -> str:
+        return f"""
 Return ONLY valid JSON (no markdown). Exactly these keys:
 mirror, directions, question
 
-mirror: string (<= 20 words)
-directions: array of exactly 3 strings (<= 12 words each)
-question: string (<= 15 words)
+mirror: string (<= 12 words)
+directions: array of exactly 3 strings (<= 8 words each)
+question: string (<= 10 words)
 
 Theme/question: {user_question_theme}
 User idea: {user_text}
 User action: {user_action}
 Nudge dimension: {nudge_dimension}
-HBDi probabilities: {prob_lines}
+HBDi probabilities:
+{prob_lines}
 
-Output must be parseable by json.loads().
+Output must be directly parseable by json.loads().
 """.strip()
 
-    response = client.models.generate_content(
-        model=model_name,
-        contents=coaching_prompt,
-        config={"temperature": 0.5, "max_output_tokens": 220},
-    )
+    def validate(data: dict) -> dict:
+        if not isinstance(data, dict):
+            raise ValueError("Coach JSON is not an object.")
+        if "mirror" not in data or "directions" not in data or "question" not in data:
+            raise ValueError("Coach JSON missing required keys.")
+        if not isinstance(data["directions"], list) or len(data["directions"]) != 3:
+            raise ValueError("Coach JSON directions must be a list of exactly 3 items.")
+        return data
 
-    text = getattr(response, "text", None) or str(response)
-    st.write("COACH RAW MODEL OUTPUT:", text)
+    attempts = 3
+    last_err = None
+    prompt = build_prompt()
 
-    data = json.loads(extract_json_object(text))
-    return {
-        "mirror": data.get("mirror", ""),
-        "directions": data.get("directions", [])[:3],
-        "question": data.get("question", ""),
-    }
+    for i in range(attempts):
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config={"temperature": 0.3, "max_output_tokens": 180},
+            )
+
+            text = getattr(response, "text", None) or str(response)
+            st.write("COACH RAW MODEL OUTPUT:", text)
+
+            data = json.loads(extract_json_object(text))
+            data = validate(data)
+
+            return {
+                "mirror": data["mirror"],
+                "directions": data["directions"][:3],
+                "question": data["question"],
+            }
+
+        except Exception as e:
+            last_err = e
+            st.write(f"Coach parse/retry {i+1}/{attempts}. Error:", str(e))
+
+            # Force a re-output of correct JSON only (no truncation-friendly reformat)
+            prompt = prompt + "\n\nREPLY AGAIN. ONLY the JSON object. No truncation. No extra text."
+
+    raise last_err
