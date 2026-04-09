@@ -24,10 +24,13 @@ def call_llm_for_hbd_probs(prompt: str) -> HBDProbabilities:
     )
 
     text = getattr(response, "text", None)
-    if not text:
-        text = str(response)
+if not text:
+    text = str(response)
 
-    json_str = extract_json_object(text)
-    data = json.loads(json_str)
+st.write("RAW MODEL OUTPUT:", text)  # <-- add this line here
 
-    return HBDProbabilities.from_json_dict(data)
+json_str = extract_json_object(text)
+data = json.loads(json_str)
+
+return HBDProbabilities.from_json_dict(data)
+
