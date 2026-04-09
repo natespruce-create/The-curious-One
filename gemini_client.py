@@ -19,15 +19,28 @@ def call_llm_for_hbd_probs(prompt: str) -> HBDProbabilities:
     client = genai.Client(api_key=api_key)
     model_name = "gemini-2.5-flash"
 
-    response = client.models.generate_content(
-        model=model_name,
-        contents=prompt,
-        config={"temperature": 0.2, "max_output_tokens": 600},
-    )
+    attempts = 3
+    last_err = None
 
-    text = getattr(response, "text", None) or str(response)
-    st.write("RAW MODEL OUTPUT:", text)
-    return parse_probs_from_csv(text)
+    for i in range(attempts):
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config={"temperature": 0.2, "max_output_tokens": 600},
+            )
+
+            text = getattr(response, "text", None) or str(response)
+            st.write("RAW MODEL OUTPUT:", text)
+            return parse_probs_from_csv(text)
+
+        except Exception as e:
+            last_err = e
+            st.write(f"HBDi probs attempt {i+1}/{attempts} failed:", str(e))
+            time.sleep(1.5 * (i + 1))
+
+    raise last_err
+
 
 
 def call_llm_for_coaching(
