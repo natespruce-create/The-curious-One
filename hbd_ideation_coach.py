@@ -131,9 +131,18 @@ def radar_chart(probs: HBDProbabilities, title: str = "HBDi Spider Web (5-dim di
 
 def extract_json_object(text: str) -> str:
     """
-    Robustly extract the first {...} JSON object.
+    Robustly extract a JSON object from model output.
+    Handles code fences and extra text around JSON.
     """
+    # 1) If code-fenced JSON exists, extract inside the fences
+    fence_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
+    if fence_match:
+        return fence_match.group(1)
+
+    # 2) Otherwise, grab the first {...} block (greedy-ish but robust enough)
     match = re.search(r"\{.*\}", text, re.DOTALL)
-    if not match:
-        raise ValueError("No JSON object found in model output.")
-    return match.group(0)
+    if match:
+        return match.group(0)
+
+    raise ValueError("No JSON object found in model output.")
+
